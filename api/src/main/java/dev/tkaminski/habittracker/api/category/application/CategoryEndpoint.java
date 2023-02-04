@@ -5,6 +5,7 @@ import dev.tkaminski.habittracker.api.category.domain.CategoryId;
 import dev.tkaminski.habittracker.api.category.domain.CategoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,6 +29,18 @@ public class CategoryEndpoint {
         this.repository = repository;
     }
 
+    @PostMapping
+    public ResponseEntity<Void> createCategory(
+            @RequestBody NewCategoryJson request
+    ) {
+        Category created  = repository.create(request.toModel());
+        CategoryId categoryId = created.id();
+        URI location = MvcUriComponentsBuilder
+                .fromMethodName(CategoryEndpoint.class, "getCategory", categoryId)
+                .buildAndExpand(categoryId).toUri();
+        return ResponseEntity.created(location).build();
+    }
+
     @GetMapping
     public ResponseEntity<List<CategoryJson>> getCategories() {
         List<CategoryJson> json = repository.findAll().stream()
@@ -42,15 +55,9 @@ public class CategoryEndpoint {
         return ResponseEntity.ok(json);
     }
 
-    @PostMapping
-    public ResponseEntity<Void> createCategory(
-            @RequestBody NewCategoryJson request
-    ) {
-        Category created  = repository.create(request.toModel());
-        CategoryId categoryId = created.id();
-        URI location = MvcUriComponentsBuilder
-                .fromMethodName(CategoryEndpoint.class, "getCategory", categoryId)
-                .buildAndExpand(categoryId).toUri();
-        return ResponseEntity.created(location).build();
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteCategory(@PathVariable String id){
+        repository.remove(CategoryId.of(id));
+        return ResponseEntity.noContent().build();
     }
 }

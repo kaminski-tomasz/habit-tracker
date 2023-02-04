@@ -36,4 +36,9 @@ public class FakeCategoryRepository implements CategoryRepository {
     public Collection<Category> findAll() {
         return categories.values();
     }
+
+    @Override
+    public void remove(CategoryId id) {
+        categories.remove(id);
+    }
 }

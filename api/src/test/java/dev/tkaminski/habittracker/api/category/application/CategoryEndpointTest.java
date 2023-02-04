@@ -96,12 +96,41 @@ public class CategoryEndpointTest {
                 );
     }
 
+    @Test
+    void should_remove_category() {
+        String category1Url = addCategory(CategoryJsonNode.builder()
+                .name("Internet")
+                .description("Nawyk przeglądania Internetu")
+                .build()
+        );
+        addCategory(CategoryJsonNode.builder()
+                .name("Kawa")
+                .description("Nawyk picia Kawy")
+                .build()
+        );
+
+        ResponseEntity<Void> result = httpClient.delete(category1Url);
+
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        ResponseEntity<JsonNode> categories = httpClient.get(url("/api/categories"));
+        assertThat(categories.getBody())
+                .hasSize(1)
+                .extracting(
+                        j -> j.get("name").asText(),
+                        j -> j.get("description").asText()
+                )
+                .containsExactly(
+                        tuple("Kawa", "Nawyk picia Kawy")
+                );
+    }
+
     String url(String path) {
         return httpClient.urlFrom(path);
     }
 
-    private void addCategory(JsonNode categoryJson) {
+    private String addCategory(JsonNode categoryJson) {
         ResponseEntity<JsonNode> createResponse = httpClient.post(url("/api/categories"), categoryJson);
         assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        return locationOf(createResponse);
     }
 }
